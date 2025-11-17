@@ -12,7 +12,7 @@ COPY reboot.sh /usr/local/sbin/reboot
 
 RUN export DEBIAN_FRONTEND=noninteractive; \
     apt-get update; \
-    apt-get install -y tzdata openssh-server sudo curl ca-certificates wget vim net-tools supervisor cron unzip iputils-ping telnet git iproute2 --no-install-recommends; \
+    apt-get install -y tzdata openssh-server dropbear htop nano virt-what p7zip-full sudo curl ca-certificates wget vim net-tools supervisor cron unzip iputils-ping telnet git iproute2 --no-install-recommends; \
     apt-get clean; \
     rm -rf /var/lib/apt/lists/*; \
     mkdir /var/run/sshd; \
@@ -21,7 +21,15 @@ RUN export DEBIAN_FRONTEND=noninteractive; \
     ln -snf /usr/share/zoneinfo/$TZ /etc/localtime; \
     echo $TZ > /etc/timezone
 
-EXPOSE 22
+RUN sed -i 's/^#Port 22/Port 8880/' /etc/ssh/sshd_config
+RUN sed -i 's/^Port 22/Port 8880/' /etc/ssh/sshd_config
+RUN echo "/usr/sbin/dropbear -p 2082" > /etc/init.d/dropbear_start.sh && \
+    chmod +x /etc/init.d/dropbear_start.sh
+
+
+EXPOSE 22 8880 2082
+
 
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["/usr/sbin/sshd", "-D"]
+CMD ["/usr/sbin/dropbear -p 2082", "-D"]
